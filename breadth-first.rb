@@ -31,3 +31,36 @@ def breadth_first graph, start
 
   return visited
 end
+
+def breadth_first_with_paths graph, start
+  frontier = []
+  puts "\nalgorithm start"
+  puts "  frontier: #{frontier.inspect}"
+  puts "  push start onto frontier"
+  frontier.unshift start
+  puts "  frontier: #{frontier.inspect}"
+  came_from = {}
+  puts "  came_from #{came_from.inspect}"
+
+  puts "  while frontier isnt empty"
+  while !frontier.empty? do
+    current = frontier.pop
+    puts "    current: #{current.inspect}"
+    puts "    frontier: #{frontier.inspect}"
+    current_neighbours = graph.neighbours(current)
+    puts "    current neighbours of #{current.inspect}: #{current_neighbours.inspect}"
+    puts "    iterating over current_neighbours"
+    current_neighbours.each do |the_next|
+      puts "      current neighbour: #{the_next.inspect}"
+      if !came_from.include? the_next
+        frontier.unshift the_next
+        came_from[the_next] = current
+        puts "      frontier: #{frontier.inspect}"
+        puts "      came_from #{came_from.inspect}"
+      end
+    end
+  end
+
+  puts "result #{came_from.inspect}"
+  return came_from
+end
