@@ -48,6 +48,28 @@ describe 'graph.neighbours' do
   end
 end
 
+describe 'graph.cost' do
+
+  it 'returns the cost of a connection' do
+    a = terse_double :a
+    b = terse_double :b
+    c = terse_double :c
+    d = terse_double :d
+    e = terse_double :e
+    nodes = [a, b, c, d, e]
+    links = [
+      [a, b, 1],
+      [b, c, 1],
+      [b, d, 3],
+      [c, e, 1],
+      [d, e, 1]
+    ]
+
+    expect(Graph.new(nodes, links).cost(b, d)).to eq 3
+  end
+
+end
+
 describe 'breadth first' do
 
   it "visits all the nodes in a graph" do
@@ -81,6 +103,77 @@ describe 'breadth first with paths' do
         c => a,
         a => b
       })
+  end
+
+end
+
+describe 'path finder' do
+
+  it 'follows a hash of path directions' do
+    a = terse_double :a
+    b = terse_double :b
+    c = terse_double :c
+    d = terse_double :d
+
+    nodes = [a, b, c, d]
+    links = [[a, b], [b, c], [b, d]]
+    graph = Graph.new(nodes, links)
+
+    path_directions = breadth_first_with_paths(graph, a)
+
+    expect(path(a, d, path_directions)).to eq [a, b, d]
+  end
+
+end
+
+describe 'breadth-first path finder' do
+
+  it 'builds and follows a hash of path directions' do
+    a = terse_double :a
+    b = terse_double :b
+    c = terse_double :c
+    d = terse_double :d
+
+    nodes = [a, b, c, d]
+    links = [[a, b], [b, c], [b, d]]
+    graph = Graph.new(nodes, links)
+
+    expect(breadth_first_path_finder(a, d, graph)).to eq [a, b, d]
+  end
+
+end
+
+describe 'priority queue' do
+
+  it 'returns the item with the highest priority' do
+    queue = PriorityQueue.new
+    queue.put :c, 6
+    queue.put :a, 1
+    queue.put :b, 2
+    expect(queue.get).to eq :c
+  end
+end
+
+describe "dijkstra's algorithm" do
+
+  it 'prioritises paths of least resistance' do
+    a = terse_double :a
+    b = terse_double :b
+    c = terse_double :c
+    d = terse_double :d
+    e = terse_double :e
+
+    nodes = [a, b, c, d, e]
+    links = [
+      [a, b, 1],
+      [b, c, 1],
+      [b, d, 3],
+      [c, e, 1],
+      [d, e, 1]
+    ]
+
+    graph = Graph.new(nodes, links)
+    expect(dijkstra(a, e, graph)).to eq [a, b, c, e]
   end
 
 end

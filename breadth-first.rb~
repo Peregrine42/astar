@@ -12,18 +12,10 @@ class Graph
   end
 
   def cost the_start, the_end
-    #puts "connections: #{@connections}"
-    result = @connections.find { |array|
+    return @connections.find { |array|
       array[0] == the_start
       array[1] == the_end
-    }
-    if result.nil?
-      result = @connections.find { |array|
-        array[0] == the_end
-        array[1] == the_start
-      }
-    end
-    result[2]
+    }[2]
   end
 
 end
@@ -81,17 +73,13 @@ def breadth_first_with_paths graph, start
 end
 
 def path start, goal, came_from
-  #puts "path_start"
-  #puts start.inspect
-  #puts goal.inspect
-  #puts came_from
   current = goal
   path = [current]
   while current != start
     current = came_from[current]
-    path.unshift(current)
+    path.push(current)
   end
-  return path
+  return path.reverse
 end
 
 def breadth_first_path_finder start, goal, graph
@@ -154,10 +142,8 @@ def dijkstra(start, goal, graph)
     break if current == goal
 
     graph.neighbours(current).each do |the_next|
-      #puts "145: #{cost_so_far[current]}"
-      #puts "current: #{current.inspect}"
-      #puts "the_next: #{the_next.inspect}"
-      #puts graph.cost(current, the_next)
+      puts "145: #{cost_so_far[current]}"
+      puts graph.cost(current, the_next)
       new_cost = cost_so_far[current] + graph.cost(current, the_next)
       if !cost_so_far.include?(the_next) || (new_cost < cost_so_far[the_next])
         cost_so_far[the_next] = new_cost
@@ -167,6 +153,5 @@ def dijkstra(start, goal, graph)
       end
     end
   end
-  #puts came_from
   return path(start, goal, came_from)
 end
