@@ -13,96 +13,67 @@ def terse_double symbol
   return Double.new symbol
 end
 
-describe 'graph.neighbours' do
-  it 'returns the neighbours of a node in a graph' do
-    a = terse_double :a
-    b = terse_double :b
-    c = terse_double :c
-
-    nodes = [a, b, c]
-    links = [[a, b], [a, c]]
-    graph = Graph.new(nodes, links)
-    expect(graph.neighbours(a)).to eq [b, c]
+Point = Struct.new(:name, :x, :y) do
+  def to_s
+    return name
   end
-
-  it 'returns the neighbours of a node in a graph with loops' do
-    a = terse_double :a
-    b = terse_double :b
-    c = terse_double :c
-
-    nodes = [a, b, c]
-    links = [[a, b], [a, c], [c, b]]
-    graph = Graph.new(nodes, links)
-    expect(graph.neighbours(a)).to eq [b, c]
-  end
-
-  it 'returns neighbours in a graph with connections in both directions' do
-    a = terse_double :a
-    b = terse_double :b
-    c = terse_double :c
-
-    nodes = [a, b, c]
-    links = [[a, b], [a, c], [c, b], [c, a]]
-    graph = Graph.new(nodes, links)
-    expect(graph.neighbours(a)).to eq [b, c]
+  def inspect
+    return name
   end
 end
 
-describe 'graph.cost' do
+def terse_point symbol, x, y
+  return Point.new symbol, x, y
+end
+
+describe 'graph.neighbours' do
+
+  before do
+    @nodes = {
+      :a => [:b, :c],
+      :b => [],
+      :c => []
+    }
+
+    @graph = Graph.new(@nodes)
+  end
+
+  it 'returns the neighbours of a node in a graph' do
+    expect(@graph.neighbours(:a)).to eq [:b, :c]
+  end
+
+end
+
+describe 'graph with weights #cost' do
 
   it 'returns the cost of a connection' do
-    a = terse_double :a
-    b = terse_double :b
-    c = terse_double :c
-    d = terse_double :d
-    e = terse_double :e
-    nodes = [a, b, c, d, e]
-    links = [
-      [a, b, 1],
-      [b, c, 1],
-      [b, d, 3],
-      [c, e, 1],
-      [d, e, 1]
-    ]
+    nodes = {
+      :a => [:b, :c],
+      :b => [],
+      :c => []
+    }
+    weights = Hash.new(0)
+    weights[[:a, :b]] = 3
 
-    expect(Graph.new(nodes, links).cost(b, d)).to eq 3
+    expect(GraphWithWeights.new(nodes, weights).cost(:a, :b)).to eq 3
   end
 
 end
 
 describe 'breadth first' do
 
-  it "visits all the nodes in a graph" do
-    a = terse_double :a
-    b = terse_double :b
-    c = terse_double :c
+  before do
+    @nodes = {
+      :a => [:b, :c],
+      :b => [],
+      :c => [:b]
+    }
 
-    nodes = [a, b, c]
-    links = [[a, b], [a, c], [c, b]]
-    graph = Graph.new(nodes, links)
-
-    expect(breadth_first(graph, a).keys).to include a, b, c
+    @graph = Graph.new(@nodes)
   end
 
-end
-
-describe 'breadth first with paths' do
-
-  it "produces all the links in a graph" do
-    a = terse_double :a
-    b = terse_double :b
-    c = terse_double :c
-
-    nodes = [a, b, c]
-    links = [[a, b], [a, c], [c, b]]
-    graph = Graph.new(nodes, links)
-
-    expect(breadth_first_with_paths(graph, a)).to include(
-      {
-        b => a,
-        c => a,
-        a => b
-      })
+  it "visits all the nodes in a graph" do
+    expect(breadth_first(@graph, :a).keys).to include :a, :b, :c
   end
 
 end
@@ -110,70 +81,91 @@ end
 describe 'path finder' do
 
   it 'follows a hash of path directions' do
-    a = terse_double :a
-    b = terse_double :b
-    c = terse_double :c
-    d = terse_double :d
+    nodes = {
+      a: [:b],
+      b: [:c, :d],
+      c: [],
+      d: []
+    }
+    graph = Graph.new(nodes)
 
-    nodes = [a, b, c, d]
-    links = [[a, b], [b, c], [b, d]]
-    graph = Graph.new(nodes, links)
+    path_directions = breadth_first_path_finder(graph, :a)
 
-    path_directions = breadth_first_with_paths(graph, a)
-
-    expect(path(a, d, path_directions)).to eq [a, b, d]
-  end
-
-end
-
-describe 'breadth-first path finder' do
-
-  it 'builds and follows a hash of path directions' do
-    a = terse_double :a
-    b = terse_double :b
-    c = terse_double :c
-    d = terse_double :d
-
-    nodes = [a, b, c, d]
-    links = [[a, b], [b, c], [b, d]]
-    graph = Graph.new(nodes, links)
-
-    expect(breadth_first_path_finder(a, d, graph)).to eq [a, b, d]
+    expect(path(:a, :d, path_directions)).to eq [:a, :b, :d]
   end
 
 end
 
 describe 'priority queue' do
 
-  it 'returns the item with the highest priority' do
-    queue = PriorityQueue.new
-    queue.put :c, 6
+  it 'returns the item first queued if no priority' do
+    queue = InversePriorityQueue.new
     queue.put :a, 1
-    queue.put :b, 2
+    queue.put :b, 1
+    expect(queue.get).to eq :a
+    expect(queue.get).to eq :b
+  end
+
+  it 'returns the last item added with the highest priority' do
+    queue = InversePriorityQueue.new
+    queue.put :c, 0
+    queue.put :a, 1
+    queue.put :b, 1
     expect(queue.get).to eq :c
+    expect(queue.get).to eq :a
+    expect(queue.get).to eq :b
   end
 end
 
 describe "dijkstra's algorithm" do
 
   it 'prioritises paths of least resistance' do
-    a = terse_double :a
-    b = terse_double :b
-    c = terse_double :c
-    d = terse_double :d
-    e = terse_double :e
+    nodes = {
+      a: [:b],
+      b: [:c, :d],
+      c: [:e],
+      d: [:e],
+      e: []
+    }
 
-    nodes = [a, b, c, d, e]
-    links = [
-      [a, b, 1],
-      [b, c, 1],
-      [b, d, 3],
-      [c, e, 1],
-      [d, e, 1]
-    ]
+    weights = Hash.new(0)
+    weights[[:b, :d]] = 3
 
-    graph = Graph.new(nodes, links)
-    expect(dijkstra(a, e, graph)).to eq [a, b, c, e]
+    graph = GraphWithWeights.new(nodes, weights)
+    expect(dijkstra(:a, :e, graph)).to eq [:a, :b, :c, :e]
+  end
+
+end
+
+describe 'greedy' do
+
+  before do
+    @a = terse_point :a, 10, 10
+    @b = terse_point :b, 12, 12
+    @c = terse_point :c, 14, 14
+    @d = terse_point :d, 8, 8
+    @e = terse_point :e, 6, 6
+
+    nodes = {
+      @a => [@b],
+      @b => [@c, @d],
+      @c => [@e],
+      @d => [@e],
+      @e => []
+    }
+
+    weights = Hash.new(0)
+    weights[[@b, @d]] = 3
+
+    @graph = GraphWithWeights.new(nodes, weights)
+  end
+
+  it 'only searches in the direction of the goal' do
+    expect(greedy(@a, @c, @graph)).to_not include @e
+  end
+
+  it 'finds a path' do
+    expect(path(@a, @c, greedy(@a, @c, @graph))).to include @a, @b, @c
   end
 
 end
