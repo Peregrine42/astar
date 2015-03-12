@@ -174,3 +174,32 @@ def greedy start, goal, graph
 
   return came_from
 end
+
+def astar start, goal, graph
+  frontier = InversePriorityQueue.new
+  frontier.put(start, 0)
+  came_from = {}
+  cost_so_far = {}
+  came_from[start] = nil
+  cost_so_far[start] = 0
+
+  until frontier.empty?
+    current = frontier.get
+
+    break if current == goal
+
+    graph.neighbours(current).each do |the_next|
+
+      new_cost = cost_so_far[current] + graph.cost(current, the_next)
+
+      if (!cost_so_far.include? the_next) || (new_cost < cost_so_far[the_next])
+        cost_so_far[the_next] = new_cost
+        priority = new_cost + heuristic(goal, the_next)
+        frontier.put(the_next, priority)
+        came_from[the_next] = current
+      end
+    end
+  end
+
+  came_from
+end

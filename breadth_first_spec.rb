@@ -137,7 +137,7 @@ describe "dijkstra's algorithm" do
 
 end
 
-describe 'greedy' do
+describe 'a star' do
 
   before do
     @a = terse_point :a, 10, 10
@@ -165,7 +165,7 @@ describe 'greedy' do
   end
 
   it 'finds a path' do
-    expect(path(@a, @c, greedy(@a, @c, @graph))).to include @a, @b, @c
+    expect(path(@a, @c, astar(@a, @c, @graph))).to include @a, @b, @c
   end
 
 end
